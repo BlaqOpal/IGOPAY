@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Re-Authenticate</title>
+    <script>
+        function startCountdown() {
+            var timeLeft = 60; // 1 minute in seconds
+            var timer = setInterval(function() {
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    document.getElementById('countdown').innerHTML = "Session expired. Please re-authenticate.";
+                } else {
+                    document.getElementById('countdown').innerHTML = timeLeft + " seconds remaining.";
+                }
+                timeLeft -= 1;
+            }, 1000);
+        }
+        window.onload = startCountdown;
+    </script>
+</head>
+<body>
+    <h1>Re-Authentication Required</h1>
+    {% if messages %}
+        {% for message in messages %}
+            <p>{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+    {% if error %}
+        <p style="color: red;">{{ error }}</p>
+    {% endif %}
+    {% if request.session.session_warning %}
+        <p style="color: orange;">Your session is about to expire! <span id="countdown"></span></p>
+    {% endif %}
+    <form method="post" action="{% url 'userauths:re_authenticate' %}">
+        {% csrf_token %}
+        <label for="otp">Enter OTP:</label>
+        <input type="text" name="otp" id="otp" required>
+        <button type="submit">Submit</button>
+    </form>
+    <form method="post" action="{% url 'userauths:re_authenticate' %}">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="resend">
+        <button type="submit">Resend OTP</button>
+    </form>
+</body>
+</html>

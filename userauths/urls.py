@@ -1,18 +1,12 @@
 from django.urls import path
-from .views import RegisterView, LoginView, LogoutView
-
-
+from . import views
 
 app_name = 'userauths'
 
-
-
-
-
-
 urlpatterns = [
-    path("sign-up/",RegisterView, name='sign-up'),
-    path("sign-in/",LoginView, name='sign-in'),
-    path("sign-out/",LogoutView, name='sign-out'),
-
+    path('register/', views.RegisterView, name='register'),
+    path('login/', views.LoginView, name='sign-in'),
+    path('logout/', views.LogoutView, name='logout'),
+    path('sign-up/', views.SignUpView, name='sign-up'),
+    # path('re-authenticate/', views.re_authenticate, name='re-authenticate'),
 ]

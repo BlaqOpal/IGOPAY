@@ -47,16 +47,18 @@ INSTALLED_APPS = [
     "core",
     "userauths",
     "account",
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
-    "django.middleware.security.SecurityMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
-    "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
-    "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "django.contrib.messages.middleware.MessageMiddleware",
-    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'userauths.middleware.ContextAwareSessionMiddleware',  # Custom middleware we added
 ]
 
 ROOT_URLCONF = "project.urls"
@@ -85,12 +87,12 @@ WSGI_APPLICATION = "project.wsgi.application"
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+        'TIMEOUT': 20,  # Add this line (in seconds)
     }
 }
-
 
 # DATABASES = {
 #     'default': {
@@ -174,14 +176,27 @@ AUTH_USER_MODEL = 'userauths.User'
 JAZZMIN_SETTINGS = {
    # "site_title": "Library Admin",
 
-    "site_header": "Paylio",
+    "site_header": "IGOPAY",
 
     "site_brand": "Payment Made Easy......",
 
     #"site_logo": "books/img/logo.png",
 
-    "copyright": "Paylio - All Right Reserved @ copyright 2023",
+    "copyright": "IGOPAY- All Right Reserved @ copyright 2025",
 
 
 
 }
+
+import sys
+
+if 'test' in sys.argv:
+    EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'  # In-memory for tests
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = 'smtp.gmail.com'
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_HOST_USER = 'blaqopal@gmail.com'  # Your test email
+    EMAIL_HOST_PASSWORD = '123moses'  # Your password 
+    DEFAULT_FROM_EMAIL = 'blaqopal@gmail.com'
