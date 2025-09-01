@@ -61,63 +61,61 @@ class ReAuthenticateView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        # Check if OTP exists and is still valid
         stored_otp = request.session.get('otp')
         otp_expiry = request.session.get('otp_expiry')
+
         if not stored_otp or not otp_expiry or timezone.now() > otp_expiry:
-            # Generate a new OTP if none or expired
             otp = str(random.randint(100000, 999999))
             request.session['otp'] = otp
             request.session['otp_expiry'] = timezone.now() + timezone.timedelta(minutes=5)
-            
-            # Send OTP via email
-            user_email = request.user.email
+
+            # Send OTP to email
             send_mail(
-                'Your OTP for Re-Authentication',
-                f'Your OTP is {otp}. It expires in 5 minutes.',
-                'your-email@gmail.com',  # From email (from settings)
-                [user_email],
+                subject='Your OTP for Re-Authentication',
+                message=f'Your OTP is {otp}. It expires in 5 minutes.',
+                from_email='your-email@gmail.com',  # Replace with settings.DEFAULT_FROM_EMAIL if needed
+                recipient_list=[request.user.email],
                 fail_silently=False,
             )
             messages.success(request, "A new OTP has been sent to your email.")
+
         return render(request, 'userauths/re-authenticate.html')
 
     def post(self, request):
-        if request.method == 'POST':
-            action = request.POST.get('action')
-            if action == 'resend':
-                # Trigger a new OTP generation
-                otp = str(random.randint(100000, 999999))
-                request.session['otp'] = otp
-                request.session['otp_expiry'] = timezone.now() + timezone.timedelta(minutes=5)
-                
-                # Send new OTP via email
-                user_email = request.user.email
-                send_mail(
-                    'Your New OTP for Re-Authentication',
-                    f'Your new OTP is {otp}. It expires in 5 minutes.',
-                    'your-email@gmail.com',
-                    [user_email],
-                    fail_silently=False,
-                )
-                messages.success(request, "A new OTP has been sent to your email.")
-                return render(request, 'userauths/re-authenticate.html')
-            
-            # Handle OTP submission
-            otp = request.POST.get('otp')
-            stored_otp = request.session.get('otp')
-            otp_expiry = request.session.get('otp_expiry')
-            
-            if not otp:
-                return render(request, 'userauths/re-authenticate.html', {'error': 'OTP required'})
-            if not stored_otp or not otp_expiry or timezone.now() > otp_expiry:
-                return render(request, 'userauths/re-authenticate.html', {'error': 'OTP expired or invalid'})
-            if otp == stored_otp:
-                del request.session['otp']
-                del request.session['otp_expiry']
-                request.session['re_authenticated'] = True
-                return redirect('core:index')
-            return render(request, 'userauths/re-authenticate.html', {'error': 'Invalid OTP'})
+        action = request.POST.get('action')
+        otp = request.POST.get('otp')
+        stored_otp = request.session.get('otp')
+        otp_expiry = request.session.get('otp_expiry')
+
+        if action == 'resend':
+            new_otp = str(random.randint(100000, 999999))
+            request.session['otp'] = new_otp
+            request.session['otp_expiry'] = timezone.now() + timezone.timedelta(minutes=5)
+
+            send_mail(
+                subject='Your New OTP for Re-Authentication',
+                message=f'Your new OTP is {new_otp}. It expires in 5 minutes.',
+                from_email='your-email@gmail.com',
+                recipient_list=[request.user.email],
+                fail_silently=False,
+            )
+            messages.success(request, "A new OTP has been sent to your email.")
+            return render(request, 'userauths/re-authenticate.html')
+
+        if not otp:
+            return render(request, 'userauths/re-authenticate.html', {'error': 'OTP is required.'})
+
+        if not stored_otp or not otp_expiry or timezone.now() > otp_expiry:
+            return render(request, 'userauths/re-authenticate.html', {'error': 'OTP expired or invalid.'})
+
+        if otp == stored_otp:
+            del request.session['otp']
+            del request.session['otp_expiry']
+            request.session['re_authenticated'] = True
+            return redirect('core:index')  # Redirect to a protected or dashboard view
+
+        return render(request, 'userauths/re-authenticate.html', {'error': 'Invalid OTP. Please try again.'})
+
         
         from django.shortcuts import render, redirect
 from django.contrib.auth.forms import UserCreationForm
